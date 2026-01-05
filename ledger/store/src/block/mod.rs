@@ -868,11 +868,12 @@ pub trait BlockStorage<N: Network>: 'static + Clone + Send + Sync {
 
         let Some(confirmed) = transactions.find_confirmed_transaction_for_unconfirmed_transaction_id(transaction_id)
         else {
-            if let Some(aborted_ids) = self.get_block_aborted_transaction_ids(&block_hash)? {
-                if aborted_ids.contains(transaction_id) {
-                    bail!("Transaction '{transaction_id}' was aborted in block '{block_hash}'");
-                }
+            if let Some(aborted_ids) = self.get_block_aborted_transaction_ids(&block_hash)?
+                && aborted_ids.contains(transaction_id)
+            {
+                bail!("Transaction '{transaction_id}' was aborted in block '{block_hash}'");
             }
+
             bail!("Missing transaction '{transaction_id}' in block storage");
         };
         Ok(Some(confirmed.transaction().clone()))

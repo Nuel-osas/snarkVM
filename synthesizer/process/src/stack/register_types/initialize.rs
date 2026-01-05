@@ -179,10 +179,10 @@ impl<N: Network> RegisterTypes<N> {
                 future_registers.pop();
                 // Check only the register operands that are `future` types.
                 for operand in async_.operands() {
-                    if let Operand::Register(register) = operand {
-                        if let Ok(RegisterType::Future(locator)) = register_types.get_type(stack, register) {
-                            assert!(future_registers.swap_remove(&(register.clone(), locator)));
-                        }
+                    if let Operand::Register(register) = operand
+                        && let Ok(RegisterType::Future(locator)) = register_types.get_type(stack, register)
+                    {
+                        assert!(future_registers.swap_remove(&(register.clone(), locator)));
                     }
                 }
                 // Ensure that all the futures created are consumed in the async call.
