@@ -249,7 +249,7 @@ fn test_execution_cost_for_authorization() {
     // Checking the cost-estimation function computes the correct cost
     let execution = transaction.execution().unwrap();
 
-    let actual_cost = execution_cost(&vm.process().read(), execution, ConsensusVersion::V14).unwrap();
+    let actual_cost = execution_cost(vm.process(), execution, ConsensusVersion::V14).unwrap();
 
     let authorization = Authorization::from_unchecked((vec![], execution.transitions().cloned().collect()));
 
@@ -264,8 +264,7 @@ fn test_execution_cost_for_authorization() {
     // - the next 2 ones come from the (input) translations for accessory_metal.record and welding_metal.record
     // - the next one comes from the (output) translation for welded_chunk.record
 
-    let expected_cost =
-        execution_cost_for_authorization(&vm.process().read(), &authorization, ConsensusVersion::V14).unwrap();
+    let expected_cost = execution_cost_for_authorization(vm.process(), &authorization, ConsensusVersion::V14).unwrap();
 
     assert_eq!(actual_cost, expected_cost);
 
