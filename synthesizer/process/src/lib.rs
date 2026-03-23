@@ -90,14 +90,13 @@ use std::{collections::HashMap, sync::Arc};
 
 // Note: a `Process` and all of its fields are meant to be completely stateless. They have no
 // notion of block height or consensus version.
-#[derive(Clone)]
 pub struct Process<N: Network> {
     /// The universal SRS.
     universal_srs: UniversalSRS<N>,
     /// The mapping of program IDs to stacks.
     stacks: Arc<RwLock<IndexMap<ProgramID<N>, Arc<Stack<N>>>>>,
     /// The mapping of program IDs to old stacks.
-    old_stacks: Arc<RwLock<IndexMap<ProgramID<N>, Option<Arc<Stack<N>>>>>>,
+    old_stacks: RwLock<IndexMap<ProgramID<N>, Option<Arc<Stack<N>>>>>,
 }
 
 impl<N: Network> Process<N> {
