@@ -2623,6 +2623,7 @@ fn test_process_deploy_credits_program() {
         universal_srs: UniversalSRS::<CurrentNetwork>::load().unwrap(),
         stacks: Default::default(),
         old_stacks: Default::default(),
+        lock: Default::default(),
     };
 
     // Construct the process.

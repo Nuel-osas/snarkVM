@@ -83,9 +83,13 @@ use snarkvm_utilities::{defer, dev_println};
 use aleo_std::prelude::{finish, lap, timer};
 use indexmap::IndexMap;
 #[cfg(feature = "locktick")]
-use locktick::parking_lot::RwLock;
+use locktick::{
+    LockGuard,
+    parking_lot::{Mutex, RwLock},
+};
+use parking_lot::MutexGuard;
 #[cfg(not(feature = "locktick"))]
-use parking_lot::RwLock;
+use parking_lot::{Mutex, RwLock};
 use std::{collections::HashMap, sync::Arc};
 
 // Note: a `Process` and all of its fields are meant to be completely stateless. They have no
@@ -97,6 +101,9 @@ pub struct Process<N: Network> {
     stacks: Arc<RwLock<IndexMap<ProgramID<N>, Arc<Stack<N>>>>>,
     /// The mapping of program IDs to old stacks.
     old_stacks: RwLock<IndexMap<ProgramID<N>, Option<Arc<Stack<N>>>>>,
+    /// A lock guarding the entire Process in case no concurrent reads or writes
+    /// on the object are to be permitted.
+    lock: Mutex<()>,
 }
 
 impl<N: Network> Process<N> {
@@ -106,8 +113,12 @@ impl<N: Network> Process<N> {
         let timer = timer!("Process:setup");
 
         // Initialize the process.
-        let process =
-            Self { universal_srs: UniversalSRS::load()?, stacks: Default::default(), old_stacks: Default::default() };
+        let process = Self {
+            universal_srs: UniversalSRS::load()?,
+            stacks: Default::default(),
+            old_stacks: Default::default(),
+            lock: Default::default(),
+        };
         lap!(timer, "Initialize process");
 
         // Initialize the 'credits.aleo' program.
@@ -134,6 +145,18 @@ impl<N: Network> Process<N> {
         finish!(timer);
         // Return the process.
         Ok(process)
+    }
+
+    /// Guard the Process against any concurrent reads or writes.
+    #[cfg(feature = "locktick")]
+    pub fn lock(&self) -> LockGuard<MutexGuard<()>> {
+        self.lock.lock()
+    }
+
+    /// Guard the Process against any concurrent reads or writes.
+    #[cfg(not(feature = "locktick"))]
+    pub fn lock(&self) -> MutexGuard<()> {
+        self.lock.lock()
     }
 
     /// Adds a new stack to the process.
@@ -236,8 +259,12 @@ impl<N: Network> Process<N> {
         let timer = timer!("Process::load");
 
         // Initialize the process.
-        let process =
-            Self { universal_srs: UniversalSRS::load()?, stacks: Default::default(), old_stacks: Default::default() };
+        let process = Self {
+            universal_srs: UniversalSRS::load()?,
+            stacks: Default::default(),
+            old_stacks: Default::default(),
+            lock: Default::default(),
+        };
         lap!(timer, "Initialize process");
 
         // Initialize the 'credits.aleo' program.
@@ -276,8 +303,12 @@ impl<N: Network> Process<N> {
         let timer = timer!("Process::load_v0");
 
         // Initialize the process.
-        let process =
-            Self { universal_srs: UniversalSRS::load()?, stacks: Default::default(), old_stacks: Default::default() };
+        let process = Self {
+            universal_srs: UniversalSRS::load()?,
+            stacks: Default::default(),
+            old_stacks: Default::default(),
+            lock: Default::default(),
+        };
         lap!(timer, "Initialize process");
 
         // Initialize the 'credits.aleo' program.
@@ -315,8 +346,12 @@ impl<N: Network> Process<N> {
     #[cfg(feature = "wasm")]
     pub fn load_web() -> Result<Self> {
         // Initialize the process.
-        let process =
-            Self { universal_srs: UniversalSRS::load()?, stacks: Default::default(), old_stacks: Default::default() };
+        let process = Self {
+            universal_srs: UniversalSRS::load()?,
+            stacks: Default::default(),
+            old_stacks: Default::default(),
+            lock: Default::default(),
+        };
 
         // Initialize the 'credits.aleo' program.
         let program = Program::credits()?;
